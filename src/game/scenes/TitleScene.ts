@@ -10,7 +10,7 @@ import { MOTION, SIZE } from '../ui/kit/design';
 import { actionPrompt, enter, hazardBand, label } from '../ui/kit/chrome';
 import { createWordmark } from '../ui/kit/wordmark';
 import { drawCarBody } from '../ui/kit/carShape';
-import { SCENE_KEYS } from '../session/navigation';
+import { LAB_KEY, SCENE_KEYS } from '../session/navigation';
 import { ACTIVE_SEATS } from '../session/controls';
 import { readSession, transition } from '../session/store';
 import { openLineup } from '../session/session';
@@ -123,6 +123,6 @@ export class TitleScene extends IdentityScene {
   protected onOtherKey(event: KeyboardEvent): void {
     // The handling lab from the previous work item stays one key away; it is the tuning tool the
     // car is still being built with, not a menu item.
-    if (event.code === 'KeyF') this.scene.start(SCENE_KEYS.feelLab);
+    if (event.code === LAB_KEY) this.scene.start(SCENE_KEYS.feelLab);
   }
 }

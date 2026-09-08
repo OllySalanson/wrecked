@@ -16,7 +16,7 @@ import {
   tickIntermission,
   type SessionState,
 } from './session';
-import { PHASE_SCENES, sceneForPhase } from './navigation';
+import { PHASE_SCENES, SCENE_KEYS, sceneAfterLab, sceneForPhase } from './navigation';
 
 /** Drives one round to completion the way the screens do, and lands on whatever comes next. */
 function playRound(state: SessionState, winner: number): SessionState {
@@ -206,5 +206,18 @@ describe('navigation', () => {
 
     expect(seen.size).toBe(Object.keys(PHASE_SCENES).length);
     expect([...seen].every((key) => key.length > 0)).toBe(true);
+  });
+
+  it('leaves the handling lab back onto the screen the session is still on', () => {
+    const title = createSession();
+    expect(sceneAfterLab(title.phase)).toBe(SCENE_KEYS.title);
+
+    // Opened from the round stand-in, which is where a player following the menus meets it.
+    const racing = startRound(openLineup(title));
+    expect(sceneAfterLab(racing.phase)).toBe(SCENE_KEYS.round);
+  });
+
+  it('never shows the handling lab as a phase, because it is a workshop and not a mode', () => {
+    expect(Object.values(PHASE_SCENES)).not.toContain(SCENE_KEYS.feelLab);
   });
 });

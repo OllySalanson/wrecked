@@ -59,7 +59,7 @@ export class TuningPanel {
           <b>Drive</b> arrows or WASD &middot; <b>Boost</b> tap brake then double-tap accelerate
           &middot; <b>R</b> back to the line &middot; <b>T</b> tyre marks &middot; <b>O</b> readout
           &middot; <b>M</b> minimap &middot; <b>C</b> collision shapes &middot; <b>F</b> faithful
-          boost on/off &middot; <b>Esc</b> back to the title
+          boost on/off &middot; <b>Esc</b> back to the menus
         </p>
       </footer>
     `;

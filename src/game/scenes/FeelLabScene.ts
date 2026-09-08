@@ -38,7 +38,8 @@ import { DebugOverlay } from '../ui/debugOverlay';
 import { Minimap } from '../ui/minimap';
 import { TuningPanel } from '../ui/tuningPanel';
 import { loadHandling } from '../ui/tuningStore';
-import { SCENE_KEYS } from '../session/navigation';
+import { SCENE_KEYS, sceneAfterLab } from '../session/navigation';
+import { readSession } from '../session/store';
 
 const GRID_TILE = 128;
 const GRID_TEXTURE_KEY = 'shunt-grid';
@@ -118,7 +119,7 @@ export class FeelLabScene extends Phaser.Scene {
   private stepsThisFrame = 0;
 
   constructor() {
-    super('FeelLab');
+    super(SCENE_KEYS.feelLab);
   }
 
   create(): void {
@@ -436,8 +437,9 @@ export class FeelLabScene extends Phaser.Scene {
     if (isTypingTarget(event.target)) return;
     switch (event.code) {
       case 'Escape':
-        // The lab is reached from the title screen, so it has to be leavable the same way.
-        this.scene.start(SCENE_KEYS.title);
+        // Back to whichever screen the lab was opened from. Opening it never touched the session,
+        // so a round that was in progress is still there, on the same score.
+        this.scene.start(sceneAfterLab(readSession(this).phase));
         break;
       case 'KeyR':
         this.resetCar();
