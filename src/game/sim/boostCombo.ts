@@ -5,7 +5,7 @@
  * game. So the combo is the default and a plain button is the alternative, not the other way round.
  * Flip `FAITHFUL_BOOST_DEFAULT` (or press F in the lab) to compare them back to back.
  *
- * The detector exposes its state because a combo nobody can see is a combo nobody can learn — the
+ * The detector exposes its state because a combo nobody can see is a combo nobody can learn - the
  * debug overlay draws it live so you can watch the input land.
  */
 

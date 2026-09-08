@@ -16,7 +16,7 @@ import {
 } from '../sim/handling';
 import { clearHandling, saveHandling, toTypeScriptSource } from './tuningStore';
 
-const GROUP_ORDER: readonly TuningGroup[] = ['Power', 'Steering', 'Grip', 'Boost'];
+const GROUP_ORDER: readonly TuningGroup[] = ['Power', 'Steering', 'Grip', 'Walls', 'Boost'];
 
 export interface TuningPanelOptions {
   /** Mutated in place so the running simulation sees every change immediately. */
@@ -29,7 +29,10 @@ export class TuningPanel {
 
   private readonly values: HandlingConstants;
   private readonly onChange?: (values: HandlingConstants) => void;
-  private readonly rows = new Map<keyof HandlingConstants, { range: HTMLInputElement; readout: HTMLElement }>();
+  private readonly rows = new Map<
+    keyof HandlingConstants,
+    { range: HTMLInputElement; readout: HTMLElement }
+  >();
   private readonly status: HTMLElement;
   private statusTimer: number | undefined;
 
@@ -54,8 +57,9 @@ export class TuningPanel {
         <p class="shunt-panel__status" role="status"></p>
         <p class="shunt-panel__keys">
           <b>Drive</b> arrows or WASD &middot; <b>Boost</b> tap brake then double-tap accelerate
-          &middot; <b>R</b> reset car &middot; <b>T</b> tyre marks &middot; <b>O</b> readout
-          &middot; <b>F</b> faithful boost on/off
+          &middot; <b>R</b> back to the line &middot; <b>T</b> tyre marks &middot; <b>O</b> readout
+          &middot; <b>M</b> minimap &middot; <b>C</b> collision shapes &middot; <b>F</b> faithful
+          boost on/off
         </p>
       </footer>
     `;
@@ -162,7 +166,9 @@ export class TuningPanel {
   }
 
   private readonly onClick = (event: MouseEvent): void => {
-    const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('button[data-action]');
+    const button = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>(
+      'button[data-action]',
+    );
     if (!button) return;
 
     switch (button.dataset.action) {
@@ -177,7 +183,7 @@ export class TuningPanel {
         void this.copy(JSON.stringify(this.values, null, 2), 'JSON copied');
         break;
       case 'copy-ts':
-        void this.copy(toTypeScriptSource(this.values), 'Copied — paste over DEFAULT_HANDLING');
+        void this.copy(toTypeScriptSource(this.values), 'Copied - paste over DEFAULT_HANDLING');
         break;
     }
   };
@@ -190,7 +196,7 @@ export class TuningPanel {
       // Clipboard access is refused in plenty of ordinary situations, so fall back to something
       // that always works rather than losing the values.
       console.log(text);
-      this.say('Clipboard blocked — printed to the console instead');
+      this.say('Clipboard blocked - printed to the console instead');
     }
   }
 

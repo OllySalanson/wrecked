@@ -12,11 +12,45 @@
 
 export const UNITS_PER_METRE = 16;
 
-/** Car body size in world units. 30 x 56 is roughly 1.9 m x 3.5 m — a stubby arcade car. */
+/** Car body size in world units. 30 x 56 is roughly 1.9 m x 3.5 m - a stubby arcade car. */
 export const CAR_WIDTH = 30;
 export const CAR_LENGTH = 56;
 
-export interface HandlingConstants {
+/**
+ * The wall block.
+ *
+ * Kept as its own interface because it is consumed by the collision resolver rather than by the car
+ * model, but folded into `HandlingConstants` below on purpose: hitting a wall is handling. There is
+ * one object, one panel and one "copy as code" block, and no way to tune the car and the walls out
+ * of step with each other.
+ */
+export interface WallConstants {
+  /** How much of a square-on impact comes back at you. 0 sticks, 1 is a snooker ball. */
+  wallRestitution: number;
+  /**
+   * Friction along the face of a wall, as a fraction of how hard the car is pressing into it.
+   *
+   * Coulomb's rule, and it is doing more work here than it looks. Because the cost scales with the
+   * impact rather than being a flat charge per contact, one dial gives a graze that is nearly free,
+   * a proper hit that scrubs off half your speed, and a lean on a barrier that costs exactly as
+   * much as you are leaning. A flat per-contact charge cannot do all three.
+   */
+  wallFriction: number;
+  /**
+   * Extra speed taken off a real crash, on top of the friction, scaled by the square of how square
+   * the hit was. Nothing below the scrape threshold pays it. This is the "is a wall a nuisance or a
+   * disaster" dial, and it moves independently of how draggy a wall is to scrape along.
+   */
+  wallBite: number;
+  /** How hard an off-centre hit spins the car. This is what turns a clipped nose into a tank-slap. */
+  wallSpin: number;
+  /** How strongly a scrape pulls the nose parallel to the wall, per second. Makes sliding possible. */
+  wallAlign: number;
+  /** Below this closing speed a contact stops bouncing and just rests, so a parked car sits still. */
+  wallSettleSpeed: number;
+}
+
+export interface HandlingConstants extends WallConstants {
   /** Forward acceleration under full throttle, world units per second squared. */
   engineForce: number;
   /** Deceleration under full brake while moving forwards. */
@@ -63,7 +97,20 @@ export interface HandlingConstants {
 }
 
 /**
- * Starting values. These are a considered first guess, not a finished car — see README "The numbers
+ * The car's collision shape: a capsule down its spine, `CAR_WIDTH / 2` thick.
+ *
+ * A rotated rectangle would be more literal, and the difference only shows where a wall ends or two
+ * walls meet - precisely the places where a rectangle solver has to pick between competing axes and
+ * a car parked in a corner buzzes between two answers. The capsule has one closest point, always,
+ * so the normal is never ambiguous and the response is never jittery. The visible cost is rounded
+ * corners: clip a wall with the very tip of a front wing and the car glances off where a rectangle
+ * would have caught. For an arcade racer that reads as forgiving rather than as wrong.
+ */
+export const CAR_COLLISION_RADIUS = CAR_WIDTH / 2;
+export const CAR_SPINE_HALF_LENGTH = (CAR_LENGTH - CAR_WIDTH) / 2;
+
+/**
+ * Starting values. These are a considered first guess, not a finished car - see README "The numbers
  * and why" for the reasoning behind each block. Expect to move them.
  */
 export const DEFAULT_HANDLING: HandlingConstants = {
@@ -90,9 +137,16 @@ export const DEFAULT_HANDLING: HandlingConstants = {
   boostSpeedBonus: 140,
   boostDurationMs: 900,
   boostCooldownMs: 2500,
+
+  wallRestitution: 0.3,
+  wallFriction: 0.35,
+  wallBite: 0.35,
+  wallSpin: 0.8,
+  wallAlign: 4,
+  wallSettleSpeed: 45,
 };
 
-export type TuningGroup = 'Power' | 'Steering' | 'Grip' | 'Boost';
+export type TuningGroup = 'Power' | 'Steering' | 'Grip' | 'Walls' | 'Boost';
 
 export interface TuningField {
   key: keyof HandlingConstants;
@@ -252,6 +306,61 @@ export const TUNING_FIELDS: readonly TuningField[] = [
     max: 1,
     step: 0.01,
     help: 'Grip left once sliding. Low means long, holdable drifts.',
+  },
+
+  {
+    key: 'wallRestitution',
+    label: 'Bounce',
+    group: 'Walls',
+    min: 0,
+    max: 1,
+    step: 0.01,
+    help: 'How much a square hit throws you back. 0 sticks to the wall, 1 is a snooker ball.',
+  },
+  {
+    key: 'wallFriction',
+    label: 'Wall drag',
+    group: 'Walls',
+    min: 0,
+    max: 1.5,
+    step: 0.01,
+    help: 'How much a wall grabs as you slide along it, in proportion to how hard you are pressing.',
+  },
+  {
+    key: 'wallBite',
+    label: 'Crash penalty',
+    group: 'Walls',
+    min: 0,
+    max: 1,
+    step: 0.01,
+    help: 'Extra speed a proper hit costs on top of the drag. Grazes never pay it.',
+  },
+  {
+    key: 'wallSpin',
+    label: 'Spin from a hit',
+    group: 'Walls',
+    min: 0,
+    max: 3,
+    step: 0.01,
+    help: 'How much clipping a wall with a corner of the car whips the back round.',
+  },
+  {
+    key: 'wallAlign',
+    label: 'Wall guidance',
+    group: 'Walls',
+    min: 0,
+    max: 14,
+    step: 0.1,
+    help: 'How hard a scrape straightens you along the wall. High is helpful, too high is on rails.',
+  },
+  {
+    key: 'wallSettleSpeed',
+    label: 'Settle below',
+    group: 'Walls',
+    min: 0,
+    max: 200,
+    step: 5,
+    help: 'Nudges slower than this stop bouncing, so resting against a wall is quiet.',
   },
 
   {

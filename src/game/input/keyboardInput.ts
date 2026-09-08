@@ -2,7 +2,7 @@
  * Keyboard input for the feel lab.
  *
  * One car for now. Two cars on one keyboard is the captain's chosen starting point for the game
- * itself, but that belongs to the local-multiplayer work item, not to the handling spike — a spike
+ * itself, but that belongs to the local-multiplayer work item, not to the handling spike - a spike
  * with two cars in it is a spike you cannot concentrate on.
  *
  * Both the arrow cluster and WASD drive the same car so either hand position works.
