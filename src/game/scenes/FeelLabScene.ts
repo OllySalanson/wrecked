@@ -14,12 +14,7 @@
  */
 
 import Phaser from 'phaser';
-import {
-  CAR_COLLISION_RADIUS,
-  CAR_LENGTH,
-  CAR_SPINE_HALF_LENGTH,
-  CAR_WIDTH,
-} from '../sim/handling';
+import { CAR_COLLISION_RADIUS, CAR_SPINE_HALF_LENGTH } from '../sim/handling';
 import type { HandlingConstants } from '../sim/handling';
 import {
   createCarInput,
@@ -38,10 +33,12 @@ import type { SegmentGrid } from '../track/segmentGrid';
 import type { Track } from '../track/trackTypes';
 import { drawTrack, type TrackView } from '../render/trackRenderer';
 import { PALETTE } from '../theme';
+import { drawCarBody } from '../ui/kit/carShape';
 import { DebugOverlay } from '../ui/debugOverlay';
 import { Minimap } from '../ui/minimap';
 import { TuningPanel } from '../ui/tuningPanel';
 import { loadHandling } from '../ui/tuningStore';
+import { SCENE_KEYS } from '../session/navigation';
 
 const GRID_TILE = 128;
 const GRID_TEXTURE_KEY = 'shunt-grid';
@@ -397,33 +394,11 @@ export class FeelLabScene extends Phaser.Scene {
   /**
    * The car is drawn rather than loaded. At this stage art would only be a distraction, and the
    * identity's four player colours mean a flat shape with a clear nose reads perfectly well.
+   * The shape itself lives in the identity kit so the menus show this exact car.
    */
   private buildCar(): Phaser.GameObjects.Container {
     const shape = this.add.graphics();
-    const halfW = CAR_WIDTH / 2;
-    const halfL = CAR_LENGTH / 2;
-    // Matched to the collision capsule's radius, so the drawn body and the thing that hits walls
-    // agree about where the corners of the car are.
-    const corner = CAR_COLLISION_RADIUS * 0.6;
-
-    // Drop shadow, so the car sits above the road rather than on it.
-    shape.fillStyle(0x000000, 0.45);
-    shape.fillRoundedRect(-halfW + 3, -halfL + 5, CAR_WIDTH, CAR_LENGTH, corner);
-
-    shape.fillStyle(PALETTE.player1, 1);
-    shape.fillRoundedRect(-halfW, -halfL, CAR_WIDTH, CAR_LENGTH, corner);
-
-    // Dark cockpit towards the back and a white wedge at the nose. Which way the car is pointing
-    // has to be unmistakable in peripheral vision, because that is how it will be read in a race.
-    shape.fillStyle(0x000000, 0.55);
-    shape.fillRect(-halfW + 4, -2, CAR_WIDTH - 8, 20);
-    shape.fillStyle(PALETTE.text, 1);
-    shape.beginPath();
-    shape.moveTo(0, -halfL + 3);
-    shape.lineTo(halfW - 5, -halfL + 15);
-    shape.lineTo(-halfW + 5, -halfL + 15);
-    shape.closePath();
-    shape.fillPath();
+    drawCarBody(shape, { colour: PALETTE.player1 });
 
     const container = this.add.container(0, 0, [shape]);
     // Sprite art points up the screen; the model's heading 0 points along +x, so rotate to match.
@@ -460,6 +435,10 @@ export class FeelLabScene extends Phaser.Scene {
   private readonly onHotkey = (event: KeyboardEvent): void => {
     if (isTypingTarget(event.target)) return;
     switch (event.code) {
+      case 'Escape':
+        // The lab is reached from the title screen, so it has to be leavable the same way.
+        this.scene.start(SCENE_KEYS.title);
+        break;
       case 'KeyR':
         this.resetCar();
         break;

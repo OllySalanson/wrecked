@@ -8,9 +8,9 @@ trailing edge that eliminates whoever falls behind. Its own name, its own art, i
 mechanics and the feel are what we are chasing; nothing is copied.
 
 **This repository is at the very start of that.** What exists today is the project skeleton, the car
-handling lab, and one circuit with walls you can hit - one car, every handling dial live on screen,
-and something to crash into. There is no camera work, no eliminator line and no weapons yet, on
-purpose.
+handling lab, one circuit with walls you can hit, and the screens a session is played through - one
+car, every handling dial live on screen, and something to crash into. There is no camera work, no
+eliminator line and no weapons yet, on purpose.
 
 ---
 
@@ -21,7 +21,8 @@ npm install
 npm run dev
 ```
 
-Open the URL it prints. You are driving immediately - no menu, no loading.
+Open the URL it prints. It lands on the title screen; `?lab` in the URL goes straight to the
+handling lab instead, and **F** on the title screen does the same.
 
 | | |
 | --- | --- |
@@ -31,6 +32,21 @@ Open the URL it prints. You are driving immediately - no menu, no loading.
 | `npm run lint` | ESLint |
 | `npm run build` | Production build |
 | `npm run format` | Prettier over the source |
+
+## Play a session
+
+Two people, one keyboard, first to ten. The screens exist to make that legible and to keep the gap
+between rounds short.
+
+| Screen | What it is for |
+| --- | --- |
+| **Title** | The name, and one way in. There is nothing else to choose yet, so there is no menu. |
+| **The grid** | Who is playing, what colour they are, and which keys are theirs - shown together, because sharing a keyboard is confusing and nothing else in the game will explain it. Slots three and four are drawn as reserved gamepad seats. |
+| **Round** | The score furniture that sits over a race. The circuit exists - drive it in the handling lab - but wiring it into a round with two cars and an eliminator is the next work item; until then `1` and `2` call the round. |
+| **Scoreboard** | Between rounds. It holds for 1.5 s and starts the next round **itself** - the design's sub-two-second restart is a requirement, so nothing here waits for a keypress. `Enter` can only make the gap shorter. |
+| **Winner** | The end of a session, in the winner's colour. The one screen allowed to wait. `Enter` rematches. |
+
+`Esc` steps back, and abandons a session from inside one.
 
 ## Drive it
 
@@ -211,8 +227,22 @@ src/
       tracks/cuttersYard.ts   The track itself: fourteen corners
     render/trackRenderer.ts   The only file in the track pipeline that knows Phaser exists
     input/keyboardInput.ts    Keys in, car input out
-    scenes/FeelLabScene.ts    The lab
-    ui/                       The tuning panel, the readout, the minimap, saved values
+    session/                  Pure TypeScript. No Phaser import in session.ts.
+      session.ts              The session state machine: rounds, scores, first to ten
+      controls.ts             Which keys and which colour belong to which seat
+      navigation.ts           Which screen shows which phase
+      store.ts                The live session, and handing over between screens
+    scenes/
+      FeelLabScene.ts         The lab
+      IdentityScene.ts        The base every screen is built on
+      TitleScene.ts           ...and the five screens themselves
+      LineupScene.ts
+      RoundScene.ts
+      ScoreboardScene.ts
+      ChampionScene.ts
+    ui/
+      kit/                    The identity: tokens, chrome, the wordmark, the race HUD
+      tuningPanel.ts          The tuning panel, the readout, the minimap, saved values
 ```
 
 Three decisions worth knowing about, because they are hard to reverse:
@@ -233,7 +263,16 @@ keeps input recording, deterministic replay and headless tuning available later.
 which is why the handling and the geometry can be covered by real tests rather than by clicking
 about. Collisions resolve in a fixed segment order and touch `dt` only in the wall-guidance term, so
 a drive at 30, 60 and 144 frames a second lands on bit-identical numbers. There is a test that says
-so.
+so. `src/game/session/session.ts` is written the same way and for the same reason: the screens are a
+rendering of that state, so "a session reaches ten and ends" is a test rather than something you
+find out by playing.
+
+**The look lives in `src/game/ui/kit`, not in the screens.** Tokens, hazard tape, slabs, keycaps,
+score pips, the wordmark and the race HUD are all components, and the screens are compositions of
+them. That is what stops the round scoreboard and the in-game furniture inventing a second visual
+identity later. Two rules inside it are load-bearing: **red belongs to the eliminator alone** and
+never appears as chrome, and **hazard yellow is the chrome except where player colours are on
+screen** - player one is that same yellow, so any screen showing drivers steps its chrome back.
 
 ### One bug this already caught
 
@@ -255,7 +294,10 @@ Each of these is its own piece of work, and none of them should start before the
   follow and is a placeholder, nothing more.
 - **The eliminator line**, and everything about making elimination feel fair rather than random.
 - **More tracks.** The representation supports them; there is one.
-- **A second car on the same keyboard**, then gamepads and cars three and four.
+- **A second car on the same keyboard**, then gamepads and cars three and four. The grid screen
+  already names both seats and reserves the space for the other two.
+- **Settings, audio options, customisation, unlockables, a single-player mode, anything online.**
+  None of these are in the MVP and none of them have a menu entry waiting for them.
 - **Weapons**, which manipulate position rather than subtracting health. There is no health bar in
   this game and there should never be one.
 - **Airstrikes** for eliminated players, so nobody sits and watches.
