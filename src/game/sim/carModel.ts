@@ -124,8 +124,7 @@ export function stepCar(
   // the velocity round with the car, and it would never slide at all.
   const speed = Math.hypot(state.vx, state.vy);
   const headingBefore = state.heading;
-  const forwardBefore =
-    state.vx * Math.cos(headingBefore) + state.vy * Math.sin(headingBefore);
+  const forwardBefore = state.vx * Math.cos(headingBefore) + state.vy * Math.sin(headingBefore);
 
   const steer = clamp(input.steer, -1, 1);
   if (steer !== 0) {

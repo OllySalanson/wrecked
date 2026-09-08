@@ -8,7 +8,13 @@
  */
 
 export const PALETTE = {
+  /** Outside the circuit: the yard the track is cut out of. */
   asphalt: 0x0a0b0d,
+  /** The drivable surface. Lifted just far enough off the yard to read as a different material. */
+  road: 0x191c22,
+  /** The face of a barrier, between the hazard stripes. Light enough to read as concrete against
+   * the yard rather than disappearing into it, so a wall looks solid instead of dashed. */
+  barrier: 0x343b46,
   panel: 0x131519,
   line: 0x2c313a,
   text: 0xe9ebee,
