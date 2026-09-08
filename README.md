@@ -22,7 +22,8 @@ npm run dev
 ```
 
 Open the URL it prints. It lands on the title screen; `?lab` in the URL goes straight to the
-handling lab instead, and **F** on the title screen does the same.
+handling lab instead, and **F** does the same from the title screen or from the round. `Esc` in the
+lab comes back to whichever screen it was opened from, session untouched.
 
 | | |
 | --- | --- |
@@ -42,7 +43,7 @@ between rounds short.
 | --- | --- |
 | **Title** | The name, and one way in. There is nothing else to choose yet, so there is no menu. |
 | **The grid** | Who is playing, what colour they are, and which keys are theirs - shown together, because sharing a keyboard is confusing and nothing else in the game will explain it. Slots three and four are drawn as reserved gamepad seats. |
-| **Round** | The score furniture that sits over a race. The circuit exists - drive it in the handling lab - but wiring it into a round with two cars and an eliminator is the next work item; until then `1` and `2` call the round. |
+| **Round** | The score furniture that sits over a race. Wiring a round with two cars, the shared camera and an eliminator is the next work item, so this screen says so and offers the part that is built: **F** drives the circuit in the handling lab, and `1` and `2` call the round. The signpost goes when the stand-in does. |
 | **Scoreboard** | Between rounds. It holds for 1.5 s and starts the next round **itself** - the design's sub-two-second restart is a requirement, so nothing here waits for a keypress. `Enter` can only make the gap shorter. |
 | **Winner** | The end of a session, in the winner's colour. The one screen allowed to wait. `Enter` rematches. |
 

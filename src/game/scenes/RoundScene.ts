@@ -9,14 +9,18 @@
  * The two keys that declare a winner are a stand-in and are labelled as one on screen. They exist
  * so the session can be walked end to end today; the round lifecycle work replaces them with the
  * last car left in the frame.
+ *
+ * Because a player following the menus arrives here rather than at a race, this screen is also the
+ * signpost to the part that is built: it says what is missing and offers the handling lab, which
+ * has no menu entry of its own and should not get one. Both go when the round does.
  */
 
 import { EDGE, IdentityScene, MARGIN } from './IdentityScene';
-import { INK, MOTION, SIZE, SPACE, STAGE } from '../ui/kit/design';
-import { enter, keycap, label, slab } from '../ui/kit/chrome';
+import { INK, MOTION, SIZE, STAGE } from '../ui/kit/design';
+import { actionPrompt, enter, keycap, label, slab } from '../ui/kit/chrome';
 import { RaceHud } from '../ui/kit/raceHud';
 import { drawCarBody } from '../ui/kit/carShape';
-import { SCENE_KEYS } from '../session/navigation';
+import { LAB_KEY, SCENE_KEYS } from '../session/navigation';
 import { ACTIVE_SEATS } from '../session/controls';
 import { readSession, transition } from '../session/store';
 import { abandonSession, endRound } from '../session/session';
@@ -68,14 +72,14 @@ export class RoundScene extends IdentityScene {
         size: SIZE.heading,
         tone: 'text',
       }).setPosition(0, -62),
-      label(
-        this,
-        'The circuit is drivable in the handling lab. Until a round runs, call it yourself',
-        {
-          size: SIZE.label,
-          tone: 'dim',
-        },
-      ).setPosition(0, -24),
+      label(this, 'Two cars, the shared camera and the eliminator are not built yet', {
+        size: SIZE.label,
+        tone: 'dim',
+      }).setPosition(0, -28),
+      label(this, 'The circuit is. Drive it in the handling lab, and call this round yourself', {
+        size: SIZE.label,
+        tone: 'dim',
+      }).setPosition(0, -4),
     ]);
     this.mount(panel, 0, 30);
     enter(this, panel, { dy: 18, delay: MOTION.stagger });
@@ -104,14 +108,21 @@ export class RoundScene extends IdentityScene {
       enter(this, row, { dy: 14, delay: MOTION.stagger * (2 + index) });
     });
 
-    this.mount(
-      label(this, 'Esc · abandon the session', { size: SIZE.micro, tone: 'dimmer', origin: 0 }),
-      EDGE.left + MARGIN,
-      EDGE.bottom - MARGIN + SPACE.tight,
+    // The way to the one part of the race that is built. It leaves with the stand-in it belongs to.
+    this.footer(
+      actionPrompt(this, 'F', 'Drive the circuit in the handling lab'),
+      actionPrompt(this, 'ESC', 'Abandon the session', { colour: INK.dim, size: SIZE.label }),
     );
   }
 
   protected onOtherKey(event: KeyboardEvent): void {
+    if (event.code === LAB_KEY) {
+      // A detour, not a transition: the session stays exactly as it is, so Esc in the lab comes
+      // back to this screen with the round and the scores untouched.
+      this.scene.start(SCENE_KEYS.feelLab);
+      return;
+    }
+
     const winner = WINNER_KEYS.indexOf(event.code);
     if (winner < 0 || winner >= ACTIVE_SEATS.length) return;
     transition(this, endRound(readSession(this), winner));
